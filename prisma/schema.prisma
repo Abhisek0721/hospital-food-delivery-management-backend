@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MealType {
+  MORNING
+  EVENING
+  NIGHT
+}
+
+enum DeliveryStatus {
+  PENDING
+  PREPARING
+  DELIVERED
+}
+
+enum UserRole {
+  ADMIN
+  NUTRITIONIST
+  DOCTOR
+  HOSPITAL_FOOD_MANAGER
+  PANTRY_STAFF
+  DELIVERY_PERSONNEL
+  PATIENT
+}
+
+model User {
+  id          String   @id @default(uuid())
+  fullName    String
+  email       String   @unique
+  password    String
+  contactInfo String
+  role        UserRole
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  location    String?
+  isNewUser   Boolean? @default(true)
+
+  patients          Patient?
+  pantryStaff       PantryStaff?
+  deliveryPersonnel DeliveryPersonnel?
+}
+
+model Patient {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  diseases         String?
+  allergies        String?
+  roomNumber       Int
+  bedNumber        Int
+  floorNumber      Int
+  age              Int
+  gender           String
+  emergencyContact String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id])
+  dietCharts DietChart[]
+}
+
+model DietChart {
+  id             String         @id @default(uuid())
+  patientId      String
+  patient        Patient        @relation(fields: [patientId], references: [id])
+  mealType       MealType
+  ingredients    String
+  instructions   String?
+  mealDeliveries MealDelivery[]
+  approved       Boolean        @default(false)
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model PantryStaff {
+  id             String         @id @default(uuid())
+  userId         String         @unique
+  mealDeliveries MealDelivery[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model DeliveryPersonnel {
+  id             String         @id @default(uuid())
+  userId         String         @unique
+  mealDeliveries MealDelivery[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model MealDelivery {
+  id                  String             @id @default(uuid())
+  dietChartId         String
+  dietChart           DietChart          @relation(fields: [dietChartId], references: [id])
+  pantryStaffId       String?
+  pantryStaff         PantryStaff?       @relation(fields: [pantryStaffId], references: [id])
+  deliveryPersonnelId String?
+  deliveryPersonnel   DeliveryPersonnel? @relation(fields: [deliveryPersonnelId], references: [id])
+  status              DeliveryStatus     @default(PENDING)
+  deliveryNotes       String?
+  timestamp           DateTime           @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

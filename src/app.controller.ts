@@ -1,12 +1,24 @@
-import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Query,
+  Render,
+  Res,
+} from '@nestjs/common';
+import { Response } from 'express';
+import { envConstant } from './constants';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  index(@Res() res: Response) {
+    return res.send(
+      `
+        <body style="background-color: #1b1b32; color: #fff;">
+            <h1 style="font-family: sans-serif;"> Running on Port: ${envConstant.PORT} </h1>
+        </body>
+        `,
+    );
   }
 }
